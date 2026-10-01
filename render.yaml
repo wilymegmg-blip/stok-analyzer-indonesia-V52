@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: stock-analyzer-indonesia-v52
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: "node server.js"
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: UPSTREAM_BASE_URL
+        sync: false
