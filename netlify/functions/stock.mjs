@@ -2,7 +2,10 @@ const YAHOO_QUOTE = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='
 const YAHOO_CHART = 'https://query1.finance.yahoo.com/v8/finance/chart/';
 
 export default async (req, context) => {
-  const ticker = (context.params?.ticker || '').toUpperCase();
+  const rawTicker = context.params?.ticker || new URL(req.url).searchParams.get('ticker') || '';
+const ticker = rawTicker.toUpperCase().includes('.') || rawTicker.startsWith('^')
+  ? rawTicker.toUpperCase()
+  : rawTicker.toUpperCase() + '.JK';
   if (!ticker) return json({ error: 'Ticker kosong' }, 400);
   const range = new URL(req.url).searchParams.get('range') || '1y';
 
