@@ -49,7 +49,7 @@ async function load(){
   $("sigFund").textContent=d.fundamental?"DATA":"WAIT";$("sigVal").textContent=d.valuation?"DATA":"WAIT";$("sigMoney").textContent=d.bigMoney?"DATA":"WAIT";$("sigTech").textContent=c.length>=20?"DATA":"WAIT";
   status((d.currency||"").toUpperCase()!=="IDR"?"Backend terhubung, tetapi mata uang "+(d.currency||"—")+" perlu dicek mapping tickernya.":"Data "+t+" berhasil diambil dari backend Netlify.",(d.currency||"").toUpperCase()==="IDR");
   try{list("news",await get("/.netlify/functions/news?ticker="+encodeURIComponent(t)),"Tidak ada berita.")}catch(e){list("news",[],"Endpoint berita belum mengembalikan data.")}
-  try{list("actions",await get("/api/corporate-actions/"+encodeURIComponent(t)),"Tidak ada corporate action.")}catch(e){list("actions",[],"Endpoint corporate action belum mengembalikan data.")}
+  try{list("actions",await get("/.netlify/functions/corporate-actions?ticker="+encodeURIComponent(t)),"Tidak ada corporate action.")}catch(e){list("actions",[],"Endpoint corporate action belum mengembalikan data.")}
  }catch(e){$("mode").textContent="ERROR";$("quality").textContent="ERROR";status("Gagal mengambil data: "+e.message)}
  $("go").disabled=false
 }
