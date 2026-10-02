@@ -48,7 +48,7 @@ async function load(){
   let o=rows(d),c=o.map(x=>x.close),a=sma(c,20),q=sma(c,50),z=sma(c,200);put("ma20",num(a.at(-1)));put("ma50",num(q.at(-1)));put("ma200",num(z.at(-1)));put("rsi",num(rsi(c)));put("macd",num(macd(c)));chart(o.slice(-+$("range").value));
   $("sigFund").textContent=d.fundamental?"DATA":"WAIT";$("sigVal").textContent=d.valuation?"DATA":"WAIT";$("sigMoney").textContent=d.bigMoney?"DATA":"WAIT";$("sigTech").textContent=c.length>=20?"DATA":"WAIT";
   status((d.currency||"").toUpperCase()!=="IDR"?"Backend terhubung, tetapi mata uang "+(d.currency||"—")+" perlu dicek mapping tickernya.":"Data "+t+" berhasil diambil dari backend Netlify.",(d.currency||"").toUpperCase()==="IDR");
-  try{list("news",await get("/api/news/"+encodeURIComponent(t)),"Tidak ada berita.")}catch(e){list("news",[],"Endpoint berita belum mengembalikan data.")}
+  try{list("news",await get("/.netlify/functions/news?ticker="+encodeURIComponent(t)),"Tidak ada berita.")}catch(e){list("news",[],"Endpoint berita belum mengembalikan data.")}
   try{list("actions",await get("/api/corporate-actions/"+encodeURIComponent(t)),"Tidak ada corporate action.")}catch(e){list("actions",[],"Endpoint corporate action belum mengembalikan data.")}
  }catch(e){$("mode").textContent="ERROR";$("quality").textContent="ERROR";status("Gagal mengambil data: "+e.message)}
  $("go").disabled=false
