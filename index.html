@@ -1,144 +1,57 @@
 <!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Stock Analyzer Indonesia — Final</title>
+<html lang="id"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stock Analyzer Indonesia V5.2</title>
 <style>
-:root{--bg:#f4f6fa;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;--dark:#111827;--green:#067647;--red:#b42318;--amber:#b54708}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
-header{background:linear-gradient(135deg,#111827,#26364d);color:#fff;padding:20px}main{max-width:1250px;margin:auto;padding:16px}
-h1,h2{margin:0 0 9px}.sub,.muted{font-size:13px;color:var(--muted)}.sub{color:#cbd5e1}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}input,button,select{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}input{flex:1;min-width:150px}button{background:var(--dark);color:#fff;cursor:pointer}.light{background:#fff;color:var(--text)}
-.status{padding:11px;border-radius:10px;background:#fffaeb;color:var(--amber);margin-bottom:14px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 8px #0000000a}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.section{margin-top:15px}
-.badge{display:inline-block;padding:5px 9px;border-radius:99px;background:#eef2ff;color:#3730a3;font-size:12px}.price{font-size:30px;font-weight:800}
-table{width:100%;border-collapse:collapse}td{padding:8px;border-bottom:1px solid #eee}.right{text-align:right}.good{color:var(--green)}.bad{color:var(--red)}
-.metric{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}.news{padding:9px 0;border-bottom:1px solid #eee}
-canvas{width:100%;height:280px;background:white;border:1px solid var(--line);border-radius:10px}.small{font-size:11px;color:var(--muted)}
-.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f2f4f7;margin:2px;font-size:12px}
-@media(max-width:600px){main{padding:12px}.price{font-size:26px}}
-</style>
-<script src="analysis-engine.js"></script>
-<script src="big-money-engine.js"></script>
-<script src="data-provider.js"></script>
-<script src="news-engine.js"></script>
-<script src="corporate-action-engine.js"></script>
-</head>
-<body>
-<header><main><h1>Stock Analyzer Indonesia — Final</h1>
-<div class="sub">V1 + V2 + V3 + V4 · Fundamental · Valuation · Technical · Big Money · News</div></main></header>
+body{margin:0;font-family:system-ui;background:#f4f6fa;color:#182230}header{background:#111827;color:white;padding:28px 18px}main{max-width:1050px;margin:auto;padding:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}input,select,button{padding:13px;border:1px solid #ddd;border-radius:12px;font:inherit}input{flex:1;min-width:180px}button{background:#111827;color:white;font-weight:700}.secondary{background:white;color:#182230}.status{padding:13px;border-radius:12px;background:#fff7e6;color:#b54708;margin-bottom:16px}.ok{background:#ecfdf3;color:#067647}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.card{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:18px;margin-bottom:14px}.badge{background:#eef2ff;color:#3730a3;padding:5px 10px;border-radius:99px;font-size:12px}.price{font-size:34px;font-weight:800;margin:8px 0}table{width:100%;border-collapse:collapse}td{padding:9px 0;border-bottom:1px solid #eee}td:last-child{text-align:right;font-weight:700}.metric{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.muted,.small{color:#667085;font-size:13px}canvas{width:100%;height:270px;border:1px solid #eee;border-radius:12px}.news{padding:10px 0;border-bottom:1px solid #eee}
+</style></head><body>
+<header><main><h1>Stock Analyzer Indonesia</h1><div>V5.2 · Fundamental · Valuation · Technical · Big Money · News</div></main></header>
 <main>
-<div class="toolbar">
-<input id="ticker" value="BBCA" placeholder="BBCA">
-<select id="range"><option value="3mo">3 bulan</option><option value="6mo">6 bulan</option><option value="1y" selected>1 tahun</option><option value="2y">2 tahun</option></select>
-<button onclick="run()">Analisis</button><button class="light" onclick="run()">↻ Refresh</button>
-</div>
-<div id="status" class="status">Menunggu koneksi backend…</div>
-
-<div class="card"><span class="badge" id="mode">DEMO</span><h2 id="name">BBCA</h2><div class="price" id="price">—</div><div class="muted" id="time">—</div></div>
-
-<div class="section grid">
-<div class="card"><h2>Fundamental</h2><table>
-<tr><td>Revenue Growth</td><td class="right" id="rev">—</td></tr>
-<tr><td>Net Profit Growth</td><td class="right" id="pg">—</td></tr>
-<tr><td>ROE</td><td class="right" id="roe">—</td></tr>
-<tr><td>DER</td><td class="right" id="der">—</td></tr>
-<tr><td>NPM</td><td class="right" id="npm">—</td></tr>
-<tr><td>EPS</td><td class="right" id="eps">—</td></tr>
-</table></div>
-<div class="card"><h2>Valuation</h2><table>
-<tr><td>PER</td><td class="right" id="per">—</td></tr>
-<tr><td>PBV</td><td class="right" id="pbv">—</td></tr>
-<tr><td>Dividend Yield</td><td class="right" id="dy">—</td></tr>
-<tr><td>Fair Value</td><td class="right" id="fv">—</td></tr>
-</table></div>
-<div class="card"><h2>Technical</h2><table>
-<tr><td>MA20</td><td class="right" id="ma20">—</td></tr>
-<tr><td>MA50</td><td class="right" id="ma50">—</td></tr>
-<tr><td>MA200</td><td class="right" id="ma200">—</td></tr>
-<tr><td>RSI 14</td><td class="right" id="rsi">—</td></tr>
-<tr><td>MACD</td><td class="right" id="macd">—</td></tr>
-</table></div>
-<div class="card"><h2>Big Money</h2><table>
-<tr><td>Foreign Net</td><td class="right" id="foreign">Belum ada sumber</td></tr>
-<tr><td>Broker Accumulation</td><td class="right" id="broker">Belum ada sumber</td></tr>
-<tr><td>Top Buyers</td><td class="right" id="buyers">Belum ada sumber</td></tr>
-<tr><td>Top Sellers</td><td class="right" id="sellers">Belum ada sumber</td></tr>
-</table></div>
-</div>
-
-<div class="section card"><h2>Price / OHLC</h2><canvas id="chart" width="1100" height="280"></canvas>
-<div class="small">Data harga mengikuti backend. Tanpa sumber berlisensi, jangan anggap sebagai feed real-time resmi IDX.</div></div>
-
-<div class="section grid">
-<div class="card"><h2>Analysis Engine</h2><div class="metric"><span>Overall</span><b id="overall">WAIT</b></div>
-<div class="metric"><span>Fundamental</span><b id="sf">WAIT</b></div>
-<div class="metric"><span>Technical</span><b id="st">WAIT</b></div>
-<div class="metric"><span>Big Money</span><b id="sm">WAIT</b></div>
-<div class="metric"><span>Valuation</span><b id="sv">WAIT</b></div>
-<div class="metric"><span>Data Quality</span><b id="dq">DEMO</b></div>
-</div>
-<div class="card"><h2>Big Money News</h2><div id="news" class="muted">Belum ada feed.</div></div>
-<div class="card"><h2>Corporate Action</h2><div id="corp" class="muted">Belum ada feed.</div></div>
-</div>
-
-<div class="section card"><h2>Data Source</h2>
-<div id="sources"><span class="pill">OHLC: belum aktif</span><span class="pill">Fundamental: belum aktif</span><span class="pill">Foreign/Broker: belum aktif</span><span class="pill">News: belum aktif</span></div>
-</div>
+<div class="toolbar"><input id="ticker" value="BBCA" placeholder="Kode saham"><select id="range"><option value="60">60 hari</option><option value="120">120 hari</option><option value="250" selected>250 hari</option></select><button id="go">Analisis</button><button id="refresh" class="secondary">↻ Refresh</button></div>
+<div id="status" class="status">Menghubungkan ke backend...</div>
+<section class="card"><span id="mode" class="badge">MEMUAT</span><h2 id="name">BBCA</h2><div id="price" class="price">—</div><div id="updated" class="muted">—</div><div id="source" class="small"></div></section>
+<section class="grid">
+<div class="card"><h2>Fundamental</h2><table><tr><td>Revenue Growth</td><td id="revenueGrowth">—</td></tr><tr><td>Net Profit Growth</td><td id="profitGrowth">—</td></tr><tr><td>ROE</td><td id="roe">—</td></tr><tr><td>DER</td><td id="der">—</td></tr><tr><td>NPM</td><td id="npm">—</td></tr><tr><td>EPS</td><td id="eps">—</td></tr></table></div>
+<div class="card"><h2>Valuation</h2><table><tr><td>PER</td><td id="per">—</td></tr><tr><td>PBV</td><td id="pbv">—</td></tr><tr><td>Dividend Yield</td><td id="dividend">—</td></tr><tr><td>Fair Value</td><td id="fairValue">—</td></tr></table></div>
+<div class="card"><h2>Technical</h2><table><tr><td>MA20</td><td id="ma20">—</td></tr><tr><td>MA50</td><td id="ma50">—</td></tr><tr><td>MA200</td><td id="ma200">—</td></tr><tr><td>RSI 14</td><td id="rsi">—</td></tr><tr><td>MACD</td><td id="macd">—</td></tr></table></div>
+<div class="card"><h2>Big Money</h2><table><tr><td>Foreign Net</td><td id="foreign">—</td></tr><tr><td>Broker</td><td id="broker">—</td></tr><tr><td>Top Buyers</td><td id="buyers">—</td></tr><tr><td>Top Sellers</td><td id="sellers">—</td></tr></table></div>
+</section>
+<section class="card"><h2>Signal Dashboard</h2><div class="metric"><span>Fundamental</span><b id="sigFund">WAIT</b></div><div class="metric"><span>Technical</span><b id="sigTech">WAIT</b></div><div class="metric"><span>Big Money</span><b id="sigMoney">WAIT</b></div><div class="metric"><span>Valuation</span><b id="sigVal">WAIT</b></div><div class="metric"><span>Kualitas Data</span><b id="quality">WAIT</b></div></section>
+<section class="card"><h2>Price & Volume</h2><canvas id="chart" width="1000" height="270"></canvas><div class="small">Grafik memakai OHLC yang dikirim backend.</div></section>
+<section class="grid"><div class="card"><h2>Big Money News</h2><div id="news">Memuat...</div></div><div class="card"><h2>Corporate Actions</h2><div id="actions">Memuat...</div></div></section>
+<div class="small">Frontend ini langsung memakai /api/stock/{ticker}, /api/news/{ticker}, dan /api/corporate-actions/{ticker}.</div>
 </main>
-
 <script>
-const $=x=>document.getElementById(x), set=(id,v)=>$(id).textContent=(v==null||v==="")?"—":v;
-window.STOCK_ANALYZER_API = localStorage.getItem("STOCK_ANALYZER_API") || "";
-const num=v=>Number(v).toLocaleString("id-ID",{maximumFractionDigits:2});
+const $=id=>document.getElementById(id);
+const put=(id,v)=>$(id).textContent=v==null||v===""?"—":v;
+const num=v=>v==null||v===""||isNaN(v)?"—":Number(v).toLocaleString("id-ID",{maximumFractionDigits:2});
+const pct=v=>v==null||v===""?"—":num(v)+"%";
+function status(t,ok){$("status").textContent=t;$("status").className="status"+(ok?" ok":"")}
 function sma(a,p){return a.map((_,i)=>i<p-1?null:a.slice(i-p+1,i+1).reduce((x,y)=>x+y,0)/p)}
 function ema(a,p){let e=null,k=2/(p+1);return a.map(v=>e=e==null?v:v*k+e*(1-k))}
-function rsi(a,p=14){if(a.length<=p)return null;let g=0,l=0;for(let i=1;i<=p;i++){let d=a[i]-a[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}g/=p;l/=p;for(let i=p+1;i<a.length;i++){let d=a[i]-a[i-1];g=(g*(p-1)+Math.max(d,0))/p;l=(l*(p-1)+Math.max(-d,0))/p}return l?100-100/(1+g/l):100}
-function macd(a){let x=ema(a,12),y=ema(a,26);return x.at(-1)-y.at(-1)}
-function draw(rows){
- const c=$("chart"),x=c.getContext("2d"),w=c.width,h=c.height;x.clearRect(0,0,w,h);
- let v=rows.map(z=>Number(z.close)).filter(Number.isFinite);if(!v.length)return;
- let mn=Math.min(...v),mx=Math.max(...v),p=24;x.beginPath();
- v.forEach((z,i)=>{let X=p+i*(w-2*p)/Math.max(1,v.length-1),Y=h-p-(z-mn)/Math.max(1,mx-mn)*(h-2*p);i?x.lineTo(X,Y):x.moveTo(X,Y)});x.stroke()
-}
-function renderOptional(d, tech){
- const f=d.fundamental||{}, val=d.valuation||{}, bm=d.bigMoney||{}; const newsState=normalizeNews(d.news||[]), corpState=normalizeCorporateActions(d.corporateActions||[]);
- set("rev",f.revenueGrowth);set("pg",f.netProfitGrowth);set("roe",f.roe);set("der",f.der);set("npm",f.npm);set("eps",f.eps);
- set("per",val.per);set("pbv",val.pbv);set("dy",val.dividendYield);set("fv",val.fairValue);
- set("foreign",bm.foreignNet);set("broker",bm.brokerAccumulation);set("buyers",bm.topBuyers);set("sellers",bm.topSellers);
-
- const fund=scoreFundamental(f), valuation=scoreValuation(val), technical=scoreTechnical(d.price,tech.ma20,tech.ma50,tech.ma200,tech.rsi,tech.macd);
- set("sf",fund.signal);set("st",technical.signal);set("sv",valuation.signal);
- const bmEngine=normalizeBigMoney(bm); set("sm",bmEngine.signal);
- const overallSignal=overall({fundamental:fund,technical,valuation,bigMoney:{signal:bmEngine.signal}}); $("overall").textContent=overallSignal;
- set("foreign",bmEngine.foreignNet); set("broker",bmEngine.brokerAccumulation); $("dq").textContent="OHLC AKTIF · Big Money "+bmEngine.signal;
- $("news").innerHTML=newsState.items.map(n=>`<div class="news"><b>${n.title||""}</b><div class="small">${n.date||""}</div></div>`).join("")||"Belum ada feed.";
- $("corp").innerHTML=corpState.items.map(n=>`<div class="news"><b>${n.title||n.type||""}</b><div class="small">${n.date||""}</div></div>`).join("")||"Belum ada feed.";
- $("sources").innerHTML=`<span class="pill">OHLC: ACTIVE</span><span class="pill">Fundamental: ${Object.keys(f).some(k=>f[k]!=null)?"AVAILABLE":"WAIT"}</span><span class="pill">Valuation: ${Object.keys(val).some(k=>val[k]!=null)?"AVAILABLE":"WAIT"}</span><span class="pill">Foreign/Broker: ${Object.keys(bm).length?"AVAILABLE":"WAIT"}</span><span class="pill">News: ${(d.news||[]).length?"AVAILABLE":"WAIT"}</span>`;
- $("status").textContent += " · Engine: "+overallSignal;
-}
-async function run(){
- let t=($("ticker").value||"BBCA").trim().toUpperCase();$("ticker").value=t;
- $("status").textContent="Mengambil data…";
+function rsi(a,p=14){if(a.length<=p)return null;let g=0,l=0;for(let i=1;i<=p;i++){let d=a[i]-a[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}let ag=g/p,al=l/p;for(let i=p+1;i<a.length;i++){let d=a[i]-a[i-1];ag=(ag*(p-1)+Math.max(d,0))/p;al=(al*(p-1)+Math.max(-d,0))/p}return al?100-100/(1+ag/al):100}
+function macd(a){if(a.length<26)return null;let f=ema(a,12),s=ema(a,26);return f.at(-1)-s.at(-1)}
+function rows(d){let a=Array.isArray(d)?d:(d.ohlc||d.data||d.items||[]);return a.map(x=>({date:x.date||x.tanggal,close:+(x.close??x.tutup),volume:+(x.volume||0)})).filter(x=>Number.isFinite(x.close))}
+function chart(a){let c=$("chart"),x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);if(!a.length)return;let v=a.map(z=>z.close),mi=Math.min(...v),ma=Math.max(...v),sp=ma-mi||1;x.beginPath();a.forEach((z,i)=>{let X=20+i*(c.width-40)/Math.max(1,a.length-1),Y=c.height-20-(z.close-mi)/sp*(c.height-40);i?x.lineTo(X,Y):x.moveTo(X,Y)});x.stroke()}
+async function get(u){let r=await fetch(u,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);return r.json()}
+function list(id,d,empty){let a=Array.isArray(d)?d:(d?.data||d?.items||[]);$(id).innerHTML=a.length?a.slice(0,6).map(x=>'<div class="news"><b>'+String(x.title||x.headline||x.name||"Item").replace(/</g,"&lt;")+'</b><br><span class="muted">'+String(x.date||x.publishedAt||"")+'</span></div>').join(""):'<span class="muted">'+empty+"</span>"}
+async function load(){
+ let t=($("ticker").value||"BBCA").trim().toUpperCase();$("go").disabled=true;status("Mengambil data "+t+"...");
  try{
-  let r=await fetch("/api/stock/"+encodeURIComponent(t)+"?range="+$("range").value);
-  if(!r.ok)throw Error("Backend HTTP "+r.status);
-  let d=await r.json(), rows=d.ohlc||[], c=rows.map(x=>Number(x.close)).filter(Number.isFinite);
-  let a=sma(c,20),b=sma(c,50),q=sma(c,200);
-  $("mode").textContent="EoD / API";$("name").textContent=t+" — "+(d.name||"");
-  set("price",d.price==null?"—":num(d.price));set("time",d.updated||new Date().toLocaleString("id-ID"));
-  set("ma20",a.at(-1)==null?"—":num(a.at(-1)));set("ma50",b.at(-1)==null?"—":num(b.at(-1)));set("ma200",q.at(-1)==null?"—":num(q.at(-1)));
-  const r=rsi(c), m=c.length<26?null:macd(c);
-  set("rsi",r==null?"—":r.toFixed(2));set("macd",m==null?"—":m.toFixed(3));draw(rows);
-  renderOptional(d,{ma20:a.at(-1),ma50:b.at(-1),ma200:q.at(-1),rsi:r,macd:m});
-  $("dq").textContent="OHLC AKTIF";$("status").textContent="Data harga/OHLC berhasil diterima dari backend.";
-  $("status").style.background="#ecfdf3";$("status").style.color="#067647";
- }catch(e){
-  $("mode").textContent="DEMO";$("status").textContent="Backend belum terpasang/aktif: "+e.message;
-  $("status").style.background="#fffaeb";$("status").style.color="#b54708";$("dq").textContent="DEMO";draw([]);
- }
+  let d=await get("/api/stock/"+encodeURIComponent(t)+"?range="+$("range").value);
+  put("name",(d.ticker||t)+" — "+(d.name||""));put("price",num(d.price));put("updated",d.updated?"Terakhir diperbarui: "+new Date(d.updated).toLocaleString("id-ID"):"Data diterima");put("source",d.source?"Sumber: "+d.source+" · Mata uang: "+(d.currency||"—"):"");
+  $("mode").textContent="API TERHUBUNG";$("quality").textContent="API TERHUBUNG";
+  let f=d.fundamental||{},v=d.valuation||{},b=d.bigMoney||{};
+  put("revenueGrowth",pct(f.revenueGrowth??f.revenue_growth));put("profitGrowth",pct(f.netProfitGrowth??f.profitGrowth));put("roe",pct(f.roe));put("der",num(f.der));put("npm",pct(f.npm??f.netMargin));put("eps",num(f.eps));
+  put("per",num(v.per));put("pbv",num(v.pbv));put("dividend",pct(v.dividendYield));put("fairValue",num(v.fairValue));
+  put("foreign",num(b.foreignNet??b.summary?.totalNet));put("broker",b.brokerAccumulation??b.summary);put("buyers",b.topBuyers);put("sellers",b.topSellers);
+  let o=rows(d),c=o.map(x=>x.close),a=sma(c,20),q=sma(c,50),z=sma(c,200);put("ma20",num(a.at(-1)));put("ma50",num(q.at(-1)));put("ma200",num(z.at(-1)));put("rsi",num(rsi(c)));put("macd",num(macd(c)));chart(o.slice(-+$("range").value));
+  $("sigFund").textContent=d.fundamental?"DATA":"WAIT";$("sigVal").textContent=d.valuation?"DATA":"WAIT";$("sigMoney").textContent=d.bigMoney?"DATA":"WAIT";$("sigTech").textContent=c.length>=20?"DATA":"WAIT";
+  status((d.currency||"").toUpperCase()!=="IDR"?"Backend terhubung, tetapi mata uang "+(d.currency||"—")+" perlu dicek mapping tickernya.":"Data "+t+" berhasil diambil dari backend Netlify.",(d.currency||"").toUpperCase()==="IDR");
+  try{list("news",await get("/api/news/"+encodeURIComponent(t)),"Tidak ada berita.")}catch(e){list("news",[],"Endpoint berita belum mengembalikan data.")}
+  try{list("actions",await get("/api/corporate-actions/"+encodeURIComponent(t)),"Tidak ada corporate action.")}catch(e){list("actions",[],"Endpoint corporate action belum mengembalikan data.")}
+ }catch(e){$("mode").textContent="ERROR";$("quality").textContent="ERROR";status("Gagal mengambil data: "+e.message)}
+ $("go").disabled=false
 }
-run();
-</script>
-</body>
-</html>
+$("go").onclick=load;$("refresh").onclick=load;$("ticker").onkeydown=e=>{if(e.key==="Enter")load()};load();
+</script></body></html>
