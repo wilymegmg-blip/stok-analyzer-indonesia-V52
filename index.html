@@ -36,22 +36,141 @@ function chart(a){let c=$("chart"),x=c.getContext("2d");x.clearRect(0,0,c.width,
 async function get(u){let r=await fetch(u,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);return r.json()}
 function list(id,d,empty){let a=Array.isArray(d)?d:(d?.data||d?.items||[]);$(id).innerHTML=a.length?a.slice(0,6).map(x=>'<div class="news"><b>'+String(x.title||x.headline||x.name||"Item").replace(/</g,"&lt;")+'</b><br><span class="muted">'+String(x.date||x.publishedAt||"")+'</span></div>').join(""):'<span class="muted">'+empty+"</span>"}
 async function load(){
- let t=($("ticker").value||"BBCA").trim().toUpperCase();$("go").disabled=true;status("Mengambil data "+t+"...");
- try{
-  let d=await get("/.netlify/functions/stock?ticker="+encodeURIComponent(t)+"&range="+$("range").value)
-  put("name",(d.ticker||t)+" — "+(d.name||""));put("price",num(d.price));put("updated",d.updated?"Terakhir diperbarui: "+new Date(d.updated).toLocaleString("id-ID"):"Data diterima");put("source",d.source?"Sumber: "+d.source+" · Mata uang: "+(d.currency||"—"):"");
-  $("mode").textContent="API TERHUBUNG";$("quality").textContent="API TERHUBUNG";
-  let f=d.fundamental||{},v=d.valuation||{},b=d.bigMoney||{};
-  put("revenueGrowth",pct(f.revenueGrowth??f.revenue_growth));put("profitGrowth",pct(f.netProfitGrowth??f.profitGrowth));put("roe",pct(f.roe));put("der",num(f.der));put("npm",pct(f.npm??f.netMargin));put("eps",num(f.eps));
-  put("per",num(v.per));put("pbv",num(v.pbv));put("dividend",pct(v.dividendYield));put("fairValue",num(v.fairValue));
-  put("foreign",num(b.foreignNet??b.summary?.totalNet));put("broker",b.brokerAccumulation??b.summary);put("buyers",b.topBuyers);put("sellers",b.topSellers);
-  let o=rows(d),c=o.map(x=>x.close),a=sma(c,20),q=sma(c,50),z=sma(c,200);put("ma20",num(a.at(-1)));put("ma50",num(q.at(-1)));put("ma200",num(z.at(-1)));put("rsi",num(rsi(c)));put("macd",num(macd(c)));chart(o.slice(-+$("range").value));
-  $("sigFund").textContent=d.fundamental?"DATA":"WAIT";$("sigVal").textContent=d.valuation?"DATA":"WAIT";$("sigMoney").textContent=d.bigMoney?"DATA":"WAIT";$("sigTech").textContent=c.length>=20?"DATA":"WAIT";
-  status((d.currency||"").toUpperCase()!=="IDR"?"Backend terhubung, tetapi mata uang "+(d.currency||"—")+" perlu dicek mapping tickernya.":"Data "+t+" berhasil diambil dari backend Netlify.",(d.currency||"").toUpperCase()==="IDR");
-  try{list("news",await get("/.netlify/functions/news?ticker="+encodeURIComponent(t)),"Tidak ada berita.")}catch(e){list("news",[],"Endpoint berita belum mengembalikan data.")}
-  try{list("actions",await get("/.netlify/functions/corporate-actions?ticker="+encodeURIComponent(t)),"Tidak ada corporate action.")}catch(e){list("actions",[],"Endpoint corporate action belum mengembalikan data.")}
- }catch(e){$("mode").textContent="ERROR";$("quality").textContent="ERROR";status("Gagal mengambil data: "+e.message)}
- $("go").disabled=false
+  let t=($("ticker").value||"BBCA").trim().toUpperCase();
+  $("go").disabled=true;
+  status("Mengambil data "+t+"...");
+
+  try{
+    let d=await get(
+      "/.netlify/functions/stock?ticker="+
+      encodeURIComponent(t)+
+      "&range="+$("range").value
+    );
+
+    put("name",(d.ticker||t)+" — "+(d.name||""));
+    put("price",num(d.price));
+    put(
+      "updated",
+      d.updated
+        ?"Terakhir diperbarui: "+new Date(d.updated).toLocaleString("id-ID")
+        :""
+    );
+
+    $("mode").textContent="API TERHUBUNG";
+    $("quality").textContent="API TERHUBUNG";
+
+    /* FUNDAMENTAL */
+    let f=d.fundamental||d.fundamentals||{};
+    put("revenueGrowth",pct(f.revenueGrowth??f.revenue_growth));
+    put("profitGrowth",pct(f.netProfitGrowth??f.profitGrowth??f.net_profit_growth));
+    put("roe",pct(f.roe));
+    put("der",num(f.der));
+    put("npm",pct(f.npm));
+    put("eps",num(f.eps));
+
+    /* VALUATION */
+    let v=d.valuation||{};
+    put("per",num(v.per));
+    put("pbv",num(v.pbv));
+    put("dividend",pct(v.dividendYield));
+    put("fairValue",num(v.fairValue));
+
+    /* PRICE DATA */
+    let o=rows(d);
+    let c=o.map(x=>Number(x.close)).filter(Number.isFinite);
+
+    /* TECHNICAL */
+    let ma20=sma(c,20);
+    let ma50=sma(c,50);
+    let ma200=sma(c,200);
+    let rsi14=rsi(c,14);
+    let macdValue=macd(c);
+
+    put("ma20",num(ma20.at(-1)));
+    put("ma50",num(ma50.at(-1)));
+    put("ma200",num(ma200.at(-1)));
+    put("rsi14",num(rsi14));
+    put("macd",num(macdValue));
+
+    /* GRAFIK */
+    chart(o);
+
+    /* BIG MONEY */
+    let b=d.bigMoney||{};
+    put("foreign",num(b.foreignNet??b.summary?.totalNet));
+    put("broker",b.brokerAccumulation??b.summary??"");
+    put("buyers",b.topBuyers??"");
+    put("sellers",b.topSellers??"");
+
+    /* SIGNAL STATUS */
+    let hasFund=[
+      f.revenueGrowth,
+      f.netProfitGrowth,
+      f.roe,
+      f.der,
+      f.npm,
+      f.eps
+    ].some(x=>x!==null&&x!==undefined&&x!=="");
+
+    let hasVal=[
+      v.per,
+      v.pbv,
+      v.dividendYield,
+      v.fairValue
+    ].some(x=>x!==null&&x!==undefined&&x!=="");
+
+    let hasMoney=Object.keys(b).length>0;
+    let hasTech=c.length>=20;
+
+    $("sigFund").textContent=hasFund?"DATA":"WAIT";
+    $("sigVal").textContent=hasVal?"DATA":"WAIT";
+    $("sigMoney").textContent=hasMoney?"DATA":"WAIT";
+    $("sigTech").textContent=hasTech?"DATA":"WAIT";
+
+    if((d.currency||"").toUpperCase()!=="IDR"){
+      status(
+        "Backend terhubung, tetapi mata uang "+
+        (d.currency||"—")+
+        " perlu dicek mapping tickernya."
+      );
+    }else{
+      status("Data "+t+" berhasil diambil dari backend Netlify.");
+    }
+
+    try{
+      list(
+        "news",
+        await get(
+          "/.netlify/functions/news?ticker="+
+          encodeURIComponent(t)
+        ),
+        "Tidak ada berita."
+      );
+    }catch(e){
+      list("news",[],"Tidak ada berita.");
+    }
+
+    try{
+      list(
+        "actions",
+        await get(
+          "/.netlify/functions/corporate-actions?ticker="+
+          encodeURIComponent(t)
+        ),
+        "Tidak ada corporate action."
+      );
+    }catch(e){
+      list("actions",[],"Tidak ada corporate action.");
+    }
+
+  }catch(e){
+    $("mode").textContent="ERROR";
+    $("quality").textContent="ERROR";
+    status("Gagal mengambil data: "+e.message);
+  }
+
+  $("go").disabled=false;
+ }
 }
 $("go").onclick=load;$("refresh").onclick=load;$("ticker").onkeydown=e=>{if(e.key==="Enter")load()};load();
 </script></body></html>
