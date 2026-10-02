@@ -52,7 +52,7 @@ const ticker = rawTicker.toUpperCase().includes('.') || rawTicker.startsWith('^'
       name: quote.longName || quote.shortName || z.meta?.longName || ticker,
       price: Number.isFinite(price) ? price : null,
       currency: quote.currency || z.meta?.currency || 'IDR',
-      updated: quote.regularMarketTime ? new Date(quote.regularMarketTime * 1000).toLocaleString('id-ID') : new Date().toLocaleString('id-ID'),
+      updated: Number.isFinite(Number(quote.regularMarketTime))
       source: 'Yahoo Finance Chart/Quote API (unofficial fallback)',
       ohlc,
       fundamentals,
