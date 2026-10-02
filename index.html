@@ -38,7 +38,7 @@ function list(id,d,empty){let a=Array.isArray(d)?d:(d?.data||d?.items||[]);$(id)
 async function load(){
  let t=($("ticker").value||"BBCA").trim().toUpperCase();$("go").disabled=true;status("Mengambil data "+t+"...");
  try{
-  let d=await get("/api/stock/"+encodeURIComponent(t)+"?range="+$("range").value);
+  let d=await get("/.netlify/functions/stock?ticker="+encodeURIComponent(t)+"&range="+$("range").value)
   put("name",(d.ticker||t)+" — "+(d.name||""));put("price",num(d.price));put("updated",d.updated?"Terakhir diperbarui: "+new Date(d.updated).toLocaleString("id-ID"):"Data diterima");put("source",d.source?"Sumber: "+d.source+" · Mata uang: "+(d.currency||"—"):"");
   $("mode").textContent="API TERHUBUNG";$("quality").textContent="API TERHUBUNG";
   let f=d.fundamental||{},v=d.valuation||{},b=d.bigMoney||{};
