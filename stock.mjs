@@ -1,4 +1,4 @@
-const YAHOO_QUOTE = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=';
+koconst YAHOO_QUOTE = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=';
 const YAHOO_CHART = 'https://query1.finance.yahoo.com/v8/finance/chart/';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36';
 
@@ -202,78 +202,65 @@ export const config = {
 
 async function yahooSummary(ticker) {
   try {
-    const cookieRes = await fetch(
+    const modules =
+      'summaryDetail,defaultKeyStatistics,financialData';
+
+    // Ambil cookie Yahoo
+    const consentRes = await fetch(
       'https://fc.yahoo.com/consent',
       {
         headers: {
           'User-Agent': UA
-        }
+        },
+        redirect: 'follow'
       }
     );
 
-    let cookie = '';
+    const cookieHeader =
+      consentRes.headers.get('set-cookie') ||
+      consentRes.headers.get('cookie') ||
+      '';
 
-    if (typeof cookieRes.headers.getSetCookie === 'function') {
-      cookie = cookieRes.headers
-        .getSetCookie()
-        .map(x => x.split(';')[0])
-        .join('; ');
-    } else {
-      const setCookie =
-        cookieRes.headers.get('set-cookie') || '';
+    const cookie = cookieHeader
+      .split(',')
+      .map(x => x.split(';')[0])
+      .filter(Boolean)
+      .join('; ');
 
-      cookie = setCookie
-        .split(/,(?=[^;]+=)/)
-        .map(x => x.split(';')[0])
-        .join('; ');
-    }
-
-    if (!cookie) {
-      return {};
-    }
-
+    // Ambil crumb
     const crumbRes = await fetch(
       'https://query1.finance.yahoo.com/v1/test/getcrumb',
       {
         headers: {
           'User-Agent': UA,
-          'Cookie': cookie
+          ...(cookie ? { 'Cookie': cookie } : {})
         }
       }
     );
 
-    if (!crumbRes.ok) {
-      return {};
-    }
+    if (!crumbRes.ok) return {};
 
     const crumb = (await crumbRes.text()).trim();
 
-    if (!crumb || crumb.includes('<')) {
-      return {};
-    }
+    if (!crumb) return {};
 
-    const modules =
-      'summaryDetail,defaultKeyStatistics,financialData';
-
+    // Quote Summary
     const url =
-      `https://query2.finance.yahoo.com/v10/finance/quoteSummary/` +
-      `${encodeURIComponent(ticker)}` +
-      `?modules=${modules}` +
-      `&crumb=${encodeURIComponent(crumb)}`;
+      'https://query1.finance.yahoo.com/v10/finance/quoteSummary/' +
+      encodeURIComponent(ticker) +
+      '?modules=' +
+      encodeURIComponent(modules) +
+      '&crumb=' +
+      encodeURIComponent(crumb);
 
-    const res = await fetch(
-      url,
-      {
-        headers: {
-          'User-Agent': UA,
-          'Cookie': cookie
-        }
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': UA,
+        ...(cookie ? { 'Cookie': cookie } : {})
       }
-    );
+    });
 
-    if (!res.ok) {
-      return {};
-    }
+    if (!res.ok) return {};
 
     const data = await res.json();
 
@@ -282,8 +269,8 @@ async function yahooSummary(ticker) {
       {}
     );
 
-  } catch {
-    // Fundamental gagal → harga/chart tetap jalan.
+  } catch (e) {
+    console.log('Yahoo summary error:', e?.message || e);
     return {};
   }
 }
